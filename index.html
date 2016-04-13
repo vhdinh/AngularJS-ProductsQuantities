@@ -8,9 +8,9 @@
 		// create factory(attached to this module)
 		myAppModule.factory('productsFactory', function(){
 			var products = [
-				{name: "Keyboard", price: 149.99},
-				{name: "Mouse", price: 59.99},
-				{name: "Basketball", price: 24.99},
+				{name: "Keyboard", price: 149.99, quantity: 50},
+				{name: "Mouse", price: 59.99, quantity: 50},
+				{name: "Basketball", price: 84.50, quantity: 50},
 			];
 
 			var factory = {}
@@ -32,6 +32,15 @@
 					products.splice(product,1);
 			}
 
+
+			// ordering a product
+			factory.orderProduct = function(product){
+				if(product.quantity > 0){
+				product.quantity -= 1
+			}
+
+			}
+
 			return factory;
 
 		
@@ -49,8 +58,11 @@
 
 			$scope.addProduct = function(){
 				// add to products array
-				console.log("YOOOOOO",$scope.newProduct)
-				productsFactory.addProduct($scope.newProduct)
+				newproduct = {name: $scope.newProduct.name, price : $scope.newProduct.price, quantity: 50}
+				console.log("YOOOOOO",newproduct)
+				// productsFactory.addProduct($scope.newProduct)
+				productsFactory.addProduct(newproduct)
+
 				// clear form values
 				$scope.newProduct = {};
 			}
@@ -69,6 +81,33 @@
 
 
 		})
+
+
+
+		// create a controller(attached to this module) and inject productsFactory in inject
+		myAppModule.controller("ordersController", function($scope, productsFactory){
+			// initialize an empy array so $scope.products maintains a consistent data type
+			$scope.products = [];
+			// run the getProducts method and set $scope data in callback
+			productsFactory.getProducts(function (data){
+				$scope.products = data;
+			})
+
+			$scope.orderProduct = function(product){
+				console.log("MAKINGORDER", product.name)
+				productsFactory.orderProduct(product)
+
+			}
+
+			// sorting
+		$scope.predicate = 'name';
+		$scope.reverse = true;
+		$scope.order = function(predicate) {
+			$scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+			$scope.predicate = predicate;
+		};
+
+		})
 	</script>
 
 	<style type="text/css">
@@ -76,6 +115,7 @@
 		font-family: arial;
 		margin: 25px;
 	}
+
 
 	form p {
 		width: 200px;
@@ -116,31 +156,58 @@
 	</style>
 </head>
 <body>
-	<div id="container" ng-controller="productsController">
-		<form>
-			<p>Product Name:</p> <input type="text" ng-model="newProduct.name">
-			<br>
-			<p>Product Price:</p> <input type="number" step="0.01" ng-model="newProduct.price">
-			<br>
-			<input id="submitProd" type="submit" value="Add Product" ng-click="addProduct()">
+	<div id="container">
+		<div id="controller1" ng-controller="productsController">
+			<h1>Products Controller</h1>
+			<form>
+				<p>Product Name:</p> <input type="text" ng-model="newProduct.name">
+				<br>
+				<p>Product Price:</p> <input type="number" step="0.01" ng-model="newProduct.price">
+				<br>
+				<input id="submitProd" type="submit" value="Add Product" ng-click="addProduct()">
 
-		</form>
+			</form>
 
-		<span style="font-size: 12px">Click on header to sort</span>
-		<table>
-			<tr>
-				<td><button ng-click="order('name')">Name</button>
-					<span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}"></span></td>
-				<td><button ng-click="order('price')">Price</button>
-					<span class="sortorder" ng-show="predicate === 'price'" ng-class="{reverse:reverse}"></span></td>
-				<td>Actions</td>
-			</tr>
-			<tr ng-repeat="product in products | orderBy:predicate:reverse">
-				<td>{{ product.name }}</td>
-				<td>${{ product.price }}</td>
-				<td><a href="#" ng-click="removeProduct(product)">Delete Product</a></td>
-			</tr>
-		</table>
+			<span style="font-size: 12px">Click on header to sort</span>
+			<table>
+				<tr>
+					<td><button ng-click="order('name')">Name</button>
+						<span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}"></span></td>
+					<td><button ng-click="order('price')">Price</button>
+						<span class="sortorder" ng-show="predicate === 'price'" ng-class="{reverse:reverse}"></span></td>
+					<td>Actions</td>
+				</tr>
+				<tr ng-repeat="product in products | orderBy:predicate:reverse">
+					<td>{{ product.name }}</td>
+					<td>${{ product.price }}</td>
+					<td><a href="#" ng-click="removeProduct(product)">Delete Product</a></td>
+				</tr>
+			</table>
+		</div>
+
+		<div id="controller2" ng-controller="ordersController">
+			<h1>Orders Controller</h1>
+			<span style="font-size: 12px">Click on header to sort</span>
+			<table>
+				<tr>
+					<td><button ng-click="order('name')">Name</button>
+						<span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}"></span>
+					</td>
+					<td><button ng-click="order('price')">Price</button>
+						<span class="sortorder" ng-show="predicate === 'price'" ng-class="{reverse:reverse}"></span></td>
+					<td><button ng-click="order('quantity')">Quantity</button>
+						<span class="sortorder" ng-show="predicate === 'price'" ng-class="{reverse:reverse}"></span></td>
+					<td>Actions</td>
+				</tr>
+				<tr ng-repeat="product in products | orderBy:predicate:reverse">
+					<td>{{ product.name }}</td>
+					<td>${{ product.price }}</td>
+					<td>{{ product.quantity}}</td>
+					<td><a href="#" ng-click="orderProduct(product)">Order</a></td>
+				</tr>
+			</table>
+
+		</div>
 
 	</div>
 </body>
